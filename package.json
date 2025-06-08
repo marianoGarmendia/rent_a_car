@@ -31,6 +31,7 @@
   },
   "packageManager": "pnpm@10.6.3",
   "dependencies": {
-    "@langchain/langgraph-api": "^0.0.38"
+    "@langchain/langgraph-api": "^0.0.38",
+    "date-fns": "^4.1.0"
   }
 }
