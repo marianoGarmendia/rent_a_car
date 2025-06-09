@@ -13,6 +13,7 @@ import { isAgentInboxInterruptSchema } from "@/lib/agent-inbox-interrupt";
 import { ThreadView } from "../agent-inbox";
 import { useQueryState, parseAsBoolean } from "nuqs";
 import { GenericInterruptView } from "./generic-interrupt";
+import {AutoAlquiler} from '@/components/ui/CarProperty'
 
 function CustomComponent({
   message,
@@ -23,18 +24,30 @@ function CustomComponent({
 }) {
   const { values } = useStreamContext();
   const customComponents = values.ui?.filter(
-    (ui) => ui.metadata?.message_id === message.id,
+    (ui) => {
+      console.log("Checking custom component for message.id:", message.id);
+      console.log("Checking custom component for metadata_id:", ui.metadata?.message_id);
+      
+      return ui.metadata?.message_id === message.id
+    
+    }
   );
 
+  console.log("Custom components for message:", message.id, customComponents);
+  
+  
   if (!customComponents?.length) return null;
+  const hasCustomComponent = customComponents[0]
   return (
     <Fragment key={message.id}>
-      {customComponents.map((customComponent) => (
+      {(hasCustomComponent?.props?.cars as AutoAlquiler[]).map((customComponent:any) => (
         <LoadExternalComponent
+         style={{ display: 'grid', width: '100%' }}
           key={customComponent.id}
           stream={thread}
           message={customComponent}
           meta={{ ui: customComponent }}
+          
         />
       ))}
     </Fragment>

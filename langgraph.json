@@ -11,5 +11,10 @@
     "retrieval_agent": "./apps/agents/src/retrieval-agent/graph.ts:graph",
     "rent_a_car_agent": "./apps/agents/src/rent-a-car-agent/graph.ts:graph"
   },
-  "env": ".env"
+ "ui": {
+    "rent_a_car_agent": "./apps/agents/index.tsx"
+  },
+  "env": "./.env"
+   
+  
 }

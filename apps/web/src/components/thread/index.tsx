@@ -113,6 +113,12 @@ export function Thread() {
   const messages = stream.messages;
   const isLoading = stream.isLoading;
 
+  console.log("stream messages: ", messages);
+  console.log("stream isLoading: ", isLoading);
+  console.log("stream ui: ", stream.values.ui);
+  
+  
+
   const lastError = useRef<string | undefined>(undefined);
 
   useEffect(() => {

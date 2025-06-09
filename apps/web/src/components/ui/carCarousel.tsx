@@ -1,113 +1,125 @@
-import { useState } from "react";
-import { v4 as uuidv4 } from "uuid";
-import {
-  useStreamContext,
-  type UIMessage,
+import  { useRef , useEffect , useState} from 'react';
+import {AutoAlquiler} from './CarProperty.jsx'
+import PropertyCard from './CarProperty.jsx';
+import "./styles.css";
+
+// import {
+//     Carousel,
+//     CarouselContent,
+//     CarouselItem,
+//     CarouselNext,
+//     CarouselPrevious,
+//   } from "../../../src/ui/Carousel.js";
+// import "./styles.css";
+
+// interface CarouselProps {
+//         items: Product[];
+//       }
+
+/// Hook para media query
+// function useMediaQuery(query: string): boolean {
+//     const [matches, setMatches] = useState(false);
+//     useEffect(() => {
+//       const mql = window.matchMedia(query);
+//       const listener = (e: MediaQueryListEvent) => setMatches(e.matches);
+//       setMatches(mql.matches);
+//       mql.addEventListener('change', listener);
+//       return () => mql.removeEventListener('change', listener);
+//     }, [query]);
+//     return matches;
+//   }
   
-} from "@langchain/langgraph-sdk/react-ui";
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-} from "@/components/ui/carousel";
-import { Button } from "@/components/ui/button";
-
-type Props = {
-  cars: Car[];
-  user: {
-    nombre: string;
-    email: string;
-  };
-};
-
-export function CarCarousel({ cars, user }: Props) {
-  const thread = useStreamContext<
-    { messages: Message[]; ui: UIMessage[] },
-    { MetaType: { ui: UIMessage | undefined } }
-  >();
-
-  const handleReserve = (car: Car) => {
-    const toolCallId = uuidv4();
-
-    thread.submit(
-      {},
-      {
-        command: {
-          update: {
-            messages: [
-              {
-                id: uuidv4(),
-                type: "ai",
-                content: `Solicitando reserva del auto ${car.marca} ${car.modelo}`,
-                tool_calls: [
-                  {
-                    id: toolCallId,
-                    name: "reservar_auto",
-                    args: {
-                      car,
-                      user,
-                    },
-                  },
-                ],
-              },
-            ],
-          },
-          goto: "generalInput",
-        },
-      }
+  interface CarouselProps {
+    items: AutoAlquiler[];
+  }
+  
+  const CarCarousel: React.FC<CarouselProps> = ({ items }) => {
+    const [current, setCurrent] = useState(0);
+    const wrapperRef = useRef<HTMLDivElement>(null);
+  
+    // Decide cuántos items por página
+    const [itemsPerPage, setItemsPerPage] = useState(1);
+    useEffect(() => {
+      const onResize = () => {
+        const w = window.innerWidth;
+        if (w >= 1024) setItemsPerPage(3);
+        else if (w >= 768) setItemsPerPage(2);
+        else setItemsPerPage(1);
+        setCurrent(0);
+      };
+      onResize();
+      window.addEventListener('resize', onResize);
+      return () => window.removeEventListener('resize', onResize);
+    }, []);
+  
+    const pageCount = Math.ceil(items.length / itemsPerPage);
+  
+    const prev = () => setCurrent(c => Math.max(c - 1, 0));
+    const next = () => setCurrent(c => Math.min(c + 1, pageCount - 1));
+  
+    return (
+      <div className="relative w-full overflow-hidden" ref={wrapperRef}>
+        {/* Track: display:flex, translateX en % */}
+        <div
+          className="flex transition-transform duration-300 ease-in-out"
+          style={{ transform: `translateX(-${current * 100}%)` }}
+        >
+          {items.map(item => (
+            <div
+              key={item.id}
+              className="flex-shrink-0 px-2"
+              style={{ flex: `0 0 calc(100% / ${itemsPerPage})` }}
+            >
+              <PropertyCard {...item} />
+            </div>
+          ))}
+        </div>
+  
+        {/* Flechas */}
+        <button
+          onClick={prev}
+          disabled={current === 0}
+          className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-white p-2 rounded-full shadow disabled:opacity-50 z-10"
+        >‹</button>
+        <button
+          onClick={next}
+          disabled={current === pageCount - 1}
+          className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-white p-2 rounded-full shadow disabled:opacity-50 z-10"
+        >›</button>
+  
+        {/* Dots */}
+        <div className="flex justify-center space-x-2 mt-4">
+          {Array.from({ length: pageCount }).map((_, i) => (
+            <button
+              key={i}
+              onClick={() => setCurrent(i)}
+              className={`h-2 w-2 rounded-full transition-colors ${
+                i === current ? 'bg-gray-800' : 'bg-gray-300'
+              }`}
+            />
+          ))}
+        </div>
+      </div>
     );
   };
 
-  return (
-    <div className="space-y-8">
-      <Carousel
-        opts={{ align: "start", loop: true }}
-        className="w-full sm:max-w-sm md:max-w-3xl"
-      >
-        <CarouselContent>
-          {cars.map((car) => (
-            <CarouselItem
-              key={car.id}
-              className="basis-1/2 md:basis-1/3 lg:basis-1/4"
-            >
-              <div className="p-4 bg-white rounded-lg shadow-md flex flex-col h-full">
-                <img
-                  src={car.img_url}
-                  alt={`${car.marca} ${car.modelo}`}
-                  className="w-full h-40 object-cover rounded"
-                />
-                <div className="mt-3 flex-1 flex flex-col justify-between">
-                  <div className="space-y-1">
-                    <h3 className="text-lg font-semibold">
-                      {car.marca} {car.modelo}
-                    </h3>
-                    <p className="text-sm text-gray-500 capitalize">
-                      {car.tipo} · {car.combustible} ·{" "}
-                      {car.automatico ? "Automático" : "Manual"}
-                    </p>
-                    <p className="text-sm text-gray-700">
-                      Pasajeros: {car.cantidad_pasajeros}
-                    </p>
-                    <p className="text-md font-semibold text-black">
-                      ${car.precio_diario.toLocaleString()} / día
-                    </p>
-                  </div>
-                  <Button
-                    className="mt-3 w-full"
-                    onClick={() => handleReserve(car)}
-                  >
-                    Reservar
-                  </Button>
-                </div>
-              </div>
-            </CarouselItem>
-          ))}
-        </CarouselContent>
-        <CarouselPrevious />
-        <CarouselNext />
-      </Carousel>
-    </div>
-  );
-}
+
+
+
+
+// interface Props {
+//   items: Product[]
+// }
+
+// const PropertyCarousel: React.FC<Props> = (props:Props) => {
+//   return (
+//     <div className="relative w-full flex flex-col gap-4 px-4 my-4">
+//       {props.items.map((p) => (
+//         <PropertyCard key={p.id} {...p} />
+//       ))}
+//     </div>
+//   )
+
+// }
+
+export default CarCarousel

@@ -17,6 +17,9 @@
     },
     "dev": {
       "dependsOn": ["^dev"]
-    }
+    },
+    "start": {
+  "dependsOn": ["^start"]
+}
   }
 }
