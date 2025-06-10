@@ -30,10 +30,21 @@ import "./styles.css";
 //   }
   
   interface CarouselProps {
-    items: AutoAlquiler[];
+    cars: AutoAlquiler[],
+    name?: string;
   }
   
-  const CarCarousel: React.FC<CarouselProps> = ({ items }) => {
+  const CarCarousel: React.FC<CarouselProps> = ({ cars , name }) => {
+
+     if (!Array.isArray(cars)) {
+    console.warn("CarCarousel: cars no es array", cars);
+    return null;
+  }
+
+  console.log("CarCarousel: cars", cars);
+
+  
+
     const [current, setCurrent] = useState(0);
     const wrapperRef = useRef<HTMLDivElement>(null);
   
@@ -52,7 +63,7 @@ import "./styles.css";
       return () => window.removeEventListener('resize', onResize);
     }, []);
   
-    const pageCount = Math.ceil(items.length / itemsPerPage);
+    const pageCount = Math.ceil(cars.length / itemsPerPage);
   
     const prev = () => setCurrent(c => Math.max(c - 1, 0));
     const next = () => setCurrent(c => Math.min(c + 1, pageCount - 1));
@@ -61,10 +72,10 @@ import "./styles.css";
       <div className="relative w-full overflow-hidden" ref={wrapperRef}>
         {/* Track: display:flex, translateX en % */}
         <div
-          className="flex transition-transform duration-300 ease-in-out"
-          style={{ transform: `translateX(-${current * 100}%)` }}
-        >
-          {items.map(item => (
+  className="flex transition-transform duration-300 ease-in-out gap-4 px-4"
+  style={{ transform: `translateX(-${current * 100}%)` }}
+>
+          {cars.map(item => (
             <div
               key={item.id}
               className="flex-shrink-0 px-2"

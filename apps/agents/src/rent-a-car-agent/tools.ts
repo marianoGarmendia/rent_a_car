@@ -1,8 +1,6 @@
 import type { Auto } from "./types.js";
 import { LangGraphRunnableConfig } from "@langchain/langgraph";
-import { ToolMessage } from "@langchain/core/messages";
-import { Command} from "@langchain/langgraph";
-
+import {ToolMessage} from "@langchain/core/messages";
 import { getToolCallId } from "./utils.js";
 import { buscarAutosSimilares } from "./utils.js";
 import { loadJsonFromAgent } from "../utils/loadJsonFromAgent.js";
@@ -29,7 +27,7 @@ export const obtenerAutosDisponiblesParaAlquilar = tool(
     );
 
     if (!tool_call_id) {
-      return "No se pudo encontrar el ID de la llamada a la herramienta.";
+      return {message: new ToolMessage("No se pudo encontrar el ID de la llamada a la herramienta.", "123" , "obtenerAutosDisponiblesParaAlquilar") , cars:[]};
     }
 
     const autosSugeridos = buscarAutosSimilares(autosDisponibles, {
@@ -40,29 +38,22 @@ export const obtenerAutosDisponiblesParaAlquilar = tool(
     });
 
     if (!autosSugeridos || autosSugeridos.length === 0) {
-
-      return new Command({
-        update:{
-          cars: [],
-          messages: [new ToolMessage("No se encontraron autos disponibles que cumplan con los requerimientos especificados, querés intentar con otros caracteristicas?", tool_call_id, "obtenerAutosDisponiblesParaAlquilar")],
-        }
-      })
-
-   
+      return {
+        message:
+          new ToolMessage("No se encontraron autos disponibles para alquilar con los criterios especificados.", tool_call_id, "obtenerAutosDisponiblesParaAlquilar"),
+        cars: [],
+      };
     }
 
     const message = `
     Hemos encontrado ${autosSugeridos.length} autos disponibles para alquilar:
     ${JSON.stringify(autosSugeridos, null, 2)}
-    Por favor verificar si estos autos cumplen con tus requerimientos.
-    `;
+    Por favor verificar si estos autos cumplen con tus requerimientos.`;
 
-    return new Command({
-        update:{
-          cars: [...autosSugeridos],
-          messages: [new ToolMessage(message, tool_call_id, "obtenerAutosDisponiblesParaAlquilar")],
-        }
-      })
+    return {
+      message: new ToolMessage(message, tool_call_id, "obtenerAutosDisponiblesParaAlquilar"),
+      cars: autosSugeridos,
+    };
   },
   {
     name: "obtenerAutosDisponiblesParaAlquilar",

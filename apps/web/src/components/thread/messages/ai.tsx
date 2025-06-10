@@ -4,7 +4,7 @@ import { AIMessage, Checkpoint, Message } from "@langchain/langgraph-sdk";
 import { getContentString } from "../utils";
 import { BranchSwitcher, CommandBar } from "./shared";
 import { MarkdownText } from "../markdown-text";
-import { LoadExternalComponent } from "@langchain/langgraph-sdk/react-ui";
+import { LoadExternalComponent, UIMessage } from "@langchain/langgraph-sdk/react-ui";
 import { cn } from "@/lib/utils";
 import { ToolCalls, ToolResult } from "./tool-calls";
 import { MessageContentComplex } from "@langchain/core/messages";
@@ -23,6 +23,9 @@ function CustomComponent({
   thread: ReturnType<typeof useStreamContext>;
 }) {
   const { values } = useStreamContext();
+
+  console.log("values in CustomComponent:", values);
+  
   const customComponents = values.ui?.filter(
     (ui) => {
       console.log("Checking custom component for message.id:", message.id);
@@ -36,19 +39,20 @@ function CustomComponent({
   console.log("Custom components for message:", message.id, customComponents);
   
   
-  if (!customComponents?.length) return null;
-  const hasCustomComponent = customComponents[0]
+   if (!customComponents?.length) return null;
   return (
     <Fragment key={message.id}>
-      {(hasCustomComponent?.props?.cars as AutoAlquiler[]).map((customComponent:any) => (
+      {customComponents.map((customComponent:any) => (
+        
         <LoadExternalComponent
-         style={{ display: 'grid', width: '100%' }}
+        style={{ display: 'grid', width: '100%' }} 
           key={customComponent.id}
           stream={thread}
-          message={customComponent}
+          message={{...customComponent} as UIMessage}
           meta={{ ui: customComponent }}
           
         />
+     
       ))}
     </Fragment>
   );

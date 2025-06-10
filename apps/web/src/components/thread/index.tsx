@@ -271,7 +271,7 @@ export function Thread() {
               )}
             </div>
             <div className="absolute top-2 right-4 flex items-center">
-              <OpenGitHubRepo />
+              {/* <OpenGitHubRepo /> */}
             </div>
           </div>
         )}
@@ -305,16 +305,16 @@ export function Thread() {
                   damping: 30,
                 }}
               >
-                <LangGraphLogoSVG width={32} height={32} />
+                {/* <LangGraphLogoSVG width={32} height={32} /> */}
                 <span className="text-xl font-semibold tracking-tight">
-                  Agent Chat
+                  Tecnom Agent
                 </span>
               </motion.button>
             </div>
 
             <div className="flex items-center gap-4">
               <div className="flex items-center">
-                <OpenGitHubRepo />
+                {/* <OpenGitHubRepo /> */}
               </div>
               <TooltipIconButton
                 size="lg"
@@ -378,9 +378,9 @@ export function Thread() {
               <div className="sticky flex flex-col items-center gap-8 bottom-0 bg-white">
                 {!chatStarted && (
                   <div className="flex gap-3 items-center">
-                    <LangGraphLogoSVG className="flex-shrink-0 h-8" />
+                    {/* <LangGraphLogoSVG className="flex-shrink-0 h-8" /> */}
                     <h1 className="text-2xl font-semibold tracking-tight">
-                      Agent Chat
+                      Tecnom Agent
                     </h1>
                   </div>
                 )}
@@ -424,14 +424,14 @@ export function Thread() {
                             htmlFor="render-tool-calls"
                             className="text-sm text-gray-600"
                           >
-                            Hide Tool Calls
+                            No mostrar "tool calls"
                           </Label>
                         </div>
                       </div>
                       {stream.isLoading ? (
                         <Button key="stop" onClick={() => stream.stop()}>
                           <LoaderCircle className="w-4 h-4 animate-spin" />
-                          Cancel
+                          Cancelar
                         </Button>
                       ) : (
                         <Button
@@ -439,7 +439,7 @@ export function Thread() {
                           className="transition-all shadow-md"
                           disabled={isLoading || !input.trim()}
                         >
-                          Send
+                          Enviar
                         </Button>
                       )}
                     </div>

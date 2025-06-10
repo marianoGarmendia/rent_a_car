@@ -39,7 +39,7 @@ export const getToolCallId = (messages: any[], toolName: string) => {
 interface BuscarAutosParams {
   fechaInicio: string; // formato "YYYY-MM-DD"
   fechaFin: string;
-  tipoAuto: Auto["tipo"];
+  tipoAuto?: Auto["tipo"];
   cantidadPasajeros: number;
   maxResultados?: number;
 }
@@ -71,6 +71,11 @@ export function buscarAutosSimilares(
 
     // 3. Verificar cantidad de pasajeros
     if (auto.cantidad_pasajeros < cantidadPasajeros) continue;
+
+      // 4. FILTRO ESTRICTO: Si se especifica un tipo, solo mostrar ese tipo
+    if (tipoAuto ) {
+      if (auto.tipo.toLowerCase() !== tipoAuto.toLowerCase()) continue;
+    }
 
     // 4. Scoring: coincidencia exacta sube puntos
     let score = 0;

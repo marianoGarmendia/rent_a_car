@@ -27,3 +27,11 @@ export interface Auto {
   activo: boolean;
   img_url: string;
 }
+
+
+export interface LeadQualifierSchema{
+   score: string
+    calificado: boolean
+    razon: string
+    siguiente_accion:string
+} 
