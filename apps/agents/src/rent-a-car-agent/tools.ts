@@ -30,6 +30,8 @@ export const obtenerAutosDisponiblesParaAlquilar = tool(
       return {message: new ToolMessage("No se pudo encontrar el ID de la llamada a la herramienta.", "123" , "obtenerAutosDisponiblesParaAlquilar") , cars:[]};
     }
 
+    
+
     const autosSugeridos = buscarAutosSimilares(autosDisponibles, {
       fechaInicio,
       fechaFin,
