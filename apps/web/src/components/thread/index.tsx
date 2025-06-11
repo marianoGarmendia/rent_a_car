@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from "uuid";
-import { ReactNode, useEffect, useRef } from "react";
+import { ReactNode, use, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useStreamContext } from "@/providers/Stream";
@@ -113,10 +113,12 @@ export function Thread() {
   const messages = stream.messages;
   const isLoading = stream.isLoading;
 
-  console.log("stream messages: ", messages);
-  console.log("stream isLoading: ", isLoading);
-  console.log("stream ui: ", stream.values.ui);
   
+
+useEffect(() => {
+  if(stream.values && stream.values.leadQualifier ) {
+    console.log("Parametros de calificacion de leads", stream.values.leadQualifier);}
+  },[stream.values])
   
 
   const lastError = useRef<string | undefined>(undefined);

@@ -23,7 +23,8 @@ import { getApiKey } from "@/lib/api-key";
 import { useThreads } from "./Thread";
 import { toast } from "sonner";
 
-export type StateType = { messages: Message[]; ui?: UIMessage[] };
+export type StateType = { messages: Message[]; ui?: UIMessage[] , leadQualifier?: Record<string, any> };
+// Define the type for the stream, including the UpdateType and CustomEventType
 
 const useTypedStream = useStream<
   StateType,

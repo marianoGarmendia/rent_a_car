@@ -35,21 +35,18 @@ import "./styles.css";
   }
   
   const CarCarousel: React.FC<CarouselProps> = ({ cars , name }) => {
+    const [current, setCurrent] = useState(0);
+    const wrapperRef = useRef<HTMLDivElement>(null);
+    const [itemsPerPage, setItemsPerPage] = useState(1);
 
-     if (!Array.isArray(cars)) {
-    console.warn("CarCarousel: cars no es array", cars);
-    return null;
-  }
+    
 
   console.log("CarCarousel: cars", cars);
 
   
 
-    const [current, setCurrent] = useState(0);
-    const wrapperRef = useRef<HTMLDivElement>(null);
   
     // Decide cuántos items por página
-    const [itemsPerPage, setItemsPerPage] = useState(1);
     useEffect(() => {
       const onResize = () => {
         const w = window.innerWidth;

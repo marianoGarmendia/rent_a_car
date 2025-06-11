@@ -24,19 +24,18 @@ function CustomComponent({
 }) {
   const { values } = useStreamContext();
 
-  console.log("values in CustomComponent:", values);
+  
   
   const customComponents = values.ui?.filter(
     (ui) => {
-      console.log("Checking custom component for message.id:", message.id);
-      console.log("Checking custom component for metadata_id:", ui.metadata?.message_id);
+     
       
       return ui.metadata?.message_id === message.id
     
     }
   );
 
-  console.log("Custom components for message:", message.id, customComponents);
+ 
   
   
    if (!customComponents?.length) return null;
