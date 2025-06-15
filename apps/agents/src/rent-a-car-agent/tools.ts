@@ -52,6 +52,8 @@ export const obtenerAutosDisponiblesParaAlquilar = tool(
     ${JSON.stringify(autosSugeridos, null, 2)}
     Por favor verificar si estos autos cumplen con tus requerimientos.`;
 
+    
+
     return {
       message: new ToolMessage(message, tool_call_id, "obtenerAutosDisponiblesParaAlquilar"),
       cars: autosSugeridos,
@@ -60,7 +62,7 @@ export const obtenerAutosDisponiblesParaAlquilar = tool(
   {
     name: "obtenerAutosDisponiblesParaAlquilar",
     description:
-      "Herramienta para obtener los autos disponibles para alquilar, según los requerimientos del usuario.",
+      "Herramienta para obtener los autos disponibles para alquilar, según los requerimientos del usuario. debes utilizarla cuando el cliente haya preguntado por los modelos disponibles, o pregunte que modelos tenemos",
     schema: z.object({
       fechaInicio: z
         .string()

@@ -2,6 +2,8 @@
 import { z } from "zod";
 import { ChatAnthropic } from "@langchain/anthropic";
 import { ChatPromptTemplate, MessagesPlaceholder } from "@langchain/core/prompts";
+import dotenv from "dotenv";
+dotenv.config();
 
 // Sistema de calificación de leads
 const leadQualificationPrompt = `
@@ -66,7 +68,7 @@ const prompt = ChatPromptTemplate.fromMessages([
 const llm = new ChatAnthropic({
   modelName: "claude-3-5-sonnet-20241022",
   temperature: 0,
-
+  apiKey: process.env.ANTHROPIC_API_KEY,
 });
 
 export const leadQualifierChain = prompt

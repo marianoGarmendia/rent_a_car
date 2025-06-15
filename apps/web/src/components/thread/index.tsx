@@ -108,17 +108,22 @@ export function Thread() {
   const [input, setInput] = useState("");
   const [firstTokenReceived, setFirstTokenReceived] = useState(false);
   const isLargeScreen = useMediaQuery("(min-width: 1024px)");
+const streamLeadQualifierRef = useRef<any>(null);
 
   const stream = useStreamContext();
   const messages = stream.messages;
   const isLoading = stream.isLoading;
 
-  
+  // streamLeadQualifierRef.current = messages.length;
+
 
 useEffect(() => {
-  if(stream.values && stream.values.leadQualifier ) {
-    console.log("Parametros de calificacion de leads", stream.values.leadQualifier);}
-  },[stream.values])
+  if(streamLeadQualifierRef.current !== messages.length){
+    console.log("Lead Qualifier: ", stream.values.leadQualifier);
+    streamLeadQualifierRef.current = messages.length + 1 ;
+  }
+ 
+}, [ messages.length]);
   
 
   const lastError = useRef<string | undefined>(undefined);
@@ -309,7 +314,7 @@ useEffect(() => {
               >
                 {/* <LangGraphLogoSVG width={32} height={32} /> */}
                 <span className="text-xl font-semibold tracking-tight">
-                  Tecnom Agent
+                  AI Agent
                 </span>
               </motion.button>
             </div>
@@ -382,7 +387,7 @@ useEffect(() => {
                   <div className="flex gap-3 items-center">
                     {/* <LangGraphLogoSVG className="flex-shrink-0 h-8" /> */}
                     <h1 className="text-2xl font-semibold tracking-tight">
-                      Tecnom Agent
+                      AI Agent
                     </h1>
                   </div>
                 )}
@@ -410,7 +415,7 @@ useEffect(() => {
                           form?.requestSubmit();
                         }
                       }}
-                      placeholder="Type your message..."
+                      placeholder="Escribe tu mensaje..."
                       className="p-3.5 pb-0 border-none bg-transparent field-sizing-content shadow-none ring-0 outline-none focus:outline-none focus:ring-0 resize-none"
                     />
 

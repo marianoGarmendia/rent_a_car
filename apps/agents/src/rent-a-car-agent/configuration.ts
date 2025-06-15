@@ -15,6 +15,8 @@ export const ConfigurationSchema = Annotation.Root({
    * El nombre del modelo a usar.
    */
   model: Annotation<string>,
+    thread_id: Annotation<string>(),
+    
 });
 
 export function ensureConfiguration(
@@ -24,9 +26,14 @@ export function ensureConfiguration(
    * Ensure the defaults are populated.
    */
   const configurable = config.configurable ?? {};
+  
+  
   return {
     systemPromptTemplate:
       configurable.systemPromptTemplate ?? SYSTEM_PROMPT_TEMPLATE,
+    thread_id: configurable.thread_id ?? "default-thread",
     model: configurable.model ?? "claude-3-7-sonnet-latest",
+
+   
   };
 }
