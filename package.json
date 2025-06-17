@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "start": "concurrently \"turbo run start --filter=web --parallel\" \"turbo run start --filter=agents\"",
-    "dev": "concurrently \"turbo dev --filter=web\" \"turbo run start --filter=agents\"",
+    "dev": "concurrently \"turbo dev --filter=web\" \"turbo run dev --filter=agents\"",
     "build": "turbo build",
     "turbo:command": "turbo",
     "format": "turbo format",

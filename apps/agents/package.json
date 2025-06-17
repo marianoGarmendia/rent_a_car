@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
    "start": "node dist/server/utils.server.js",
-    "dev": "npx @langchain/langgraph-cli dev --port 2024 --config ../../langgraph.json",
+   "dev": "tsx src/server/utils.server.ts --dev",
     "build": "turbo build:internal --filter=agents",
     "build:internal": "pnpm run clean && tsc",
     "clean": "rm -rf ./dist .turbo || true",
