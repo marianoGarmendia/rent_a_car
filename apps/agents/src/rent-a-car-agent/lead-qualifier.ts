@@ -79,3 +79,13 @@ export const leadQualifierChain = prompt
     result.calificado = result.score > 6;
     return result;
   });
+
+  // Asi se configura con el nodo calificador:
+
+  //  .addNode("callModel", callModel)
+  // .addNode("tools", toolNode)
+  // .addNode("leadQualifierNode", leadQualifierNode)
+  // .addEdge("__start__", "leadQualifierNode")
+  // .addEdge("leadQualifierNode", "callModel")
+  // .addConditionalEdges("callModel", routeModelOutput, ["tools", "__end__"])
+  // .addEdge("tools", "callModel");

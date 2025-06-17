@@ -1,58 +1,45 @@
 import express from "express";
-
+import WebSocket, { WebSocketServer } from "ws";
+import http from "http";
 import cors from "cors";
 
-import { SYSTEM_PROMPT_TEMPLATE } from "./src/rent-a-car-agent/prompts.js";
-
-import path, { dirname } from "path";
-import { fileURLToPath } from "url";
-
-// import { processAudioElevenLabs } from "./procesing-voices/text-to-speech.js";
-// import { ensureToolCallsHaveResponses } from "./ensure-tool-response.ts";
-
-const __filename = fileURLToPath(import.meta.url);
-console.log("filename: ", __filename);
-
-const __dirname = dirname(__filename);
-console.log("dirname: ", __dirname);
-
-
-
 import { graph } from "./src/rent-a-car-agent/graph.js";
-import { isArray } from "lodash-es";
+import { SYSTEM_PROMPT_TEMPLATE } from "./src/rent-a-car-agent/prompts.js";
 
 
 const app = express();
-const PORT = process.env.PORT || 5000;
-
-
-// Middleware para parsear JSON
-app.use(express.json());
 app.use(cors());
-app.use(express.static(path.join(__dirname, "..")));
-// Servir archivos estáticos desde la carpeta 'public'
-app.use(express.static(path.join(__dirname, "public")));
-console.log("path.join: ", path.join(__dirname, "public"));
+app.use(express.json());
 
+const server = http.createServer(app);
+const wss = new WebSocketServer({ server });
 
+// Mapeo de thread_id → datos del cliente
+const clientInfoByThread = new Map<
+  string,
+  {
+    ws: WebSocket;
+    runId: string;
+    run_id: string;
+  }
+>();
 
+const connectedClients = new Set<WebSocket>();
 
+// Endpoint custom para elevenlabs conversationl
 const threadLocks = new Map<string, boolean>();
 
 app.post("/v1/chat/completions", async (req, res) => {
-  const { messages, stream } = req.body;
+  const { messages, stream, elevenlabs_extra_body } = req.body;
   const last_message = messages.at(-1);
- 
+  const { threadId, runId, runIdConfig } = elevenlabs_extra_body || {};
 
-  
+  console.log("last message: ", last_message);
 
-  if (last_message.role !== "user") {
-    res.write(
-      `event: error\ndata: ${JSON.stringify({
-        message: "El último mensaje debe ser del usuario",
-      })}\n\n`
-    );
-    res.write("data: [DONE]\n\n");
+  if (last_message?.role !== "user") {
+    res.status(400).json({
+      error: "El último mensaje debe ser del usuario",
+    });
     return;
   }
 
@@ -60,70 +47,57 @@ app.post("/v1/chat/completions", async (req, res) => {
     res.status(400).json({ error: "Solo soporta stream=true" });
     return;
   }
-  res.setHeader("Content-Type", "text/event-stream");
-  res.setHeader("Cache-Control", "no-cache");
-  res.setHeader("Connection", "keep-alive");
 
-    // En tu handler de /chat/completions
-    req.on("close", (e:any) => {
-      console.log("[SSE] Cliente/proxy cerró la conexión");
-      console.log("[SSE] Close:", e);
-      threadLocks.set(thread_id, false);
-      
-    });
-    res.on("error", (err) => {
-      console.error("[SSE] Error en el stream:", err);
-    });
-
-  const heartbeat = setInterval(() =>     res.write(`: ping\n\n`), 2000);
-
-
-  const thread_id = "149";
-  if (threadLocks.get(thread_id)) {
-    clearInterval(heartbeat);
-    // Informamos por SSE y luego cerramos
-    res.write(`event: error\ndata: ${JSON.stringify({
-      message: "Espera un momento, estoy procesando información",
-    })}\n\n`);
-    res.write("data: [DONE]\n\n");
-    res.end();
-    return;
-  }
- 
-
+  
+  
+  
   try {
-    // inyectar ToolMessages faltantes
-  
+      const agentResp = await graph.invoke(
+          { messages: last_message },
+          {
+              configurable: {
+                  thread_id:threadId,
+                  run_id: runIdConfig,
+                  systemPromptTemplate: SYSTEM_PROMPT_TEMPLATE,
+                  model: "gpt-4o",
+                },
+                runId,
+                streamMode: "updates" as const,
+            }
+        );
+        
+        const state = await graph.getState({
+            configurable: { thread_id: threadId },
+        });
+
+        
+        const clientInfo = threadId && clientInfoByThread.get(threadId);
+        // console.log("State values:", state.values);
+
+        if(state.values.ui.length > 0 && clientInfo) {
+            console.log("props", state.values.ui.at(-1)?.props);
+            console.log("autos sugeridos", state.values.cars);
+            
+            clientInfo.ws.send(
+                JSON.stringify({
+                    type: "ui",
+                    data: state.values.ui.at(-1)?.props
+                }))
+        }
    
-    
-    const agentResp = await graph.invoke(
-      { messages: last_message },
-      { configurable: { thread_id , run_id: "123456" , systemPromptTemplate:SYSTEM_PROMPT_TEMPLATE, model: "gpt-4o"} , runId: "1234565689999789", streamMode: "updates" as const, }
-    );
-    console.log("agentResp: ");
-    
-    
+
+
 
    
-  
-    // const reply =
-    //   agentResp.messages.at(-1)?.content || "No hay respuesta del agente";
+
     let reply = "";
 
-    console.log("agentResp: ", (agentResp as any).at(-1).callModel.messages[0].content);
-    
-    if(isArray(agentResp)) {
-      console.log(agentResp);
-      
-       reply = agentResp.at(-1).callModel.messages[0].content || "No hay respuesta del agente";
-
+    if (Array.isArray(agentResp)) {
+      reply =
+        agentResp.at(-1)?.callModel.messages[0]?.content ??
+        "No hay respuesta del agente";
     }
 
-      
-
-    
-
-    // construir chunk
     const id = Date.now().toString();
     const created = Math.floor(Date.now() / 1000);
     const chunk = {
@@ -134,76 +108,111 @@ app.post("/v1/chat/completions", async (req, res) => {
       choices: [
         {
           index: 0,
-          delta: { role: "assistant", content: reply === "" ? "Muy bien, voy a realizar la búsqueda espera un momento por favor" : reply },
+          delta: {
+            role: "assistant",
+            content:
+              reply === ""
+                ? "Muy bien, voy a realizar la búsqueda, espera un momento por favor"
+                : reply,
+          },
           finish_reason: "stop",
         },
       ],
     };
+
+    console.log("Enviando respuesta a ElevenLabs");
+  
     
-    console.log("send a elevenlabs");
-    // console.dir(chunk, { depth: null, colors: true });
     
+    // res.json(chunk); // ← RESPUESTA NORMAL HTTP
     res.write(`data: ${JSON.stringify(chunk)}\n\n`);
     res.write("data: [DONE]\n\n");
-    // res.end()
-    
-  } catch (err:any) {
-    res.write(
-      `event: error\ndata: ${JSON.stringify({ message: err.message })}\n\n`
-    );
-    res.write("data: [DONE]\n\n");
-    console.log("Error en /v1/chat/completions:", err);
-  } finally {
-    clearInterval(heartbeat);
-   
+
     res.end();
+    return;
+  } catch (err: any) {
+    console.error("Error en /v1/chat/completions:", err);
+    res.status(500).json({
+      error: err.message ?? "Error desconocido del servidor",
+    });
+    return;
   }
 });
 
-// Lista de clientes conectados vía SSE
-const clients: any[] = [];
+// Endpoint para enviar props (ejecutado desde LangGraph o alguna tool)
+app.post("/api/enviar-cars", (req, res) => {
+  const cars = req.body.cars;
+  if (!Array.isArray(cars)) {
+    res.status(400).json({ error: "Faltan los cars (deben ser un array)" });
+    return;
+  }
 
-app.get("/events/props", (req, res) => {
-  res.setHeader("Access-Control-Allow-Origin", "http://localhost:3000"); // O "*", si querés habilitar todos los orígenes
-  res.setHeader("Content-Type", "text/event-stream");
-  res.setHeader("Cache-Control", "no-cache");
-  res.setHeader("Connection", "keep-alive");
-console.log("Conectando cliente SSE...");
-console.dir("req: ", req);
+  const message = JSON.stringify({ type: "cars", data: cars });
+  connectedClients.forEach((client) => {
+    if (client.readyState === client.OPEN) {
+      client.send(message);
+    }
+  });
 
-  // Enviar evento de bienvenida
-  res.write(`event: connected\ndata: ${JSON.stringify({ ok: true })}\n\n`);
+  res.json({ ok: true });
+});
 
-  // Guardamos la conexión
-  clients.push(res);
+// 👇 Registro via WebSocket
+wss.on("connection", (ws) => {
+    console.log("[WS] Nueva conexión establecida");
+  ws.on("message", (msg) => {
 
-  // Cuando el cliente se desconecta, lo eliminamos
-  req.on("close", () => {
-    const i = clients.indexOf(res);
-    if (i !== -1) clients.splice(i, 1);
+     console.log("[WS] Mensaje crudo recibido:", msg.toString());
+
+     let data;
+  
+  try {
+    data = JSON.parse(msg.toString());
+    console.log("[WS] Parsed message:", data);
+  } catch (err) {
+    console.error("[WS] JSON inválido:", err);
+    return;
+  }
+
+
+    try {
+      data = JSON.parse(msg.toString());
+    } catch {
+      return;
+    }
+    if (data.type !== "register" || !data.thread_id) return;
+
+    clientInfoByThread.set(data.thread_id, {
+      ws,
+      runId: data.runId,
+      run_id: data.runIdConfig,
+    });
+    console.log(`[WS] Registrado thread ${data.thread_id}`);
+  });
+
+  ws.on("close", () => {
+    clientInfoByThread.forEach((info, thread_id) => {
+      if (info.ws === ws) {
+        clientInfoByThread.delete(thread_id);
+        console.log(`[WS] Desregistrado thread ${thread_id}`);
+        return;
+      }
+    });
   });
 });
 
-// Endpoint que usás desde LangGraph o tus tools para enviar autos
-app.post("/api/enviar-props", (req, res) => {
-  const props = req.body.props;
-  console.log("enviando props: ", props);
-  
-  if (!Array.isArray(props)) {
-    res.status(400).json({ error: "Faltan las props" });
-    return
-  }
-
-  const payload = `event: props\ndata: ${JSON.stringify(props)}\n\n`;
-
-  // Emitir a todos los clientes conectados
-  clients.forEach(client => client.write(payload));
-
-  res.status(200).json({ ok: true });
-  return
+server.listen(5000, () => {
+  console.log("Servidor corriendo en http://localhost:5000");
 });
 
-// Iniciar el servidor
-app.listen(PORT, () => {
-  console.log(`Servidor corriendo en http://localhost:${PORT}`);
-});
+/*
+    Ya tengo pasado desde el front el thread_id y los run que puedo hacer:_ Opción básica: Persistencia con localStorage
+    generar un id guardarlo e ir a buscarlo cada vez que recargue y que se borre si desmonta
+    Pero primero debo saber como langgraph agent guarda un id en la url para poder utilizar ese y hacerlo mas complejo
+
+    - Ya estoy leyendo el state y con ello la ui ára poder enviar los componentes y que los renderice.. ademas puedo gestionarlos por thread_id enviado desde el cliente
+
+    - Esa interfaz y endpont funcionan bien desde "new.con.ts"
+
+
+*/

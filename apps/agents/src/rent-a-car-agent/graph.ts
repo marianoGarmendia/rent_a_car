@@ -22,6 +22,8 @@ import { LeadQualifierSchema } from "./types.js";
 import { ConfigurationSchema, ensureConfiguration } from "./configuration.js";
 
 import { loadChatModel } from "./utils.js";
+import { response } from "express";
+
 
 interface ObtenerAutosArgs {
   fechaInicio: string;
@@ -89,28 +91,28 @@ function routeModelOutput(state: typeof stateGraph.State): string {
 }
 
 // enviar los autos al cliente
-const sendCarsToClient = async (cars: Auto[]) => {
-  console.log("Enviando autos al cliente: ", cars);
-  try {
-    const response = await fetch("http://localhost:5000/api/enviar-cars", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ cars }),
-    });
+// const sendCarsToClient = async (cars: Auto[]) => {
+//   console.log("Enviando autos al cliente: ", cars);
+//   try {
+//     const response = await fetch("http://localhost:5000/api/enviar-cars", {
+//       method: "POST",
+//       headers: {
+//         "Content-Type": "application/json",
+//       },
+//       body: JSON.stringify({ cars }),
+//     });
 
-    if (!response.ok) {
-      throw new Error(`Error al enviar los autos: ${response.statusText}`);
-    }
+//     if (!response.ok) {
+//       throw new Error(`Error al enviar los autos: ${response.statusText}`);
+//     }
 
-    const data = await response.json();
-    console.log("Respuesta del servidor al enviar autos: ", data);
-  } catch (error: any) {
-    console.error("Error al enviar los autos al cliente:", error);
-    throw new Error(`Error al enviar los autos al cliente: ${error.message}`);
-  }
-};
+//     const data = await response.json();
+//     console.log("Respuesta del servidor al enviar autos: ", data);
+//   } catch (error: any) {
+//     console.error("Error al enviar los autos al cliente:", error);
+//     throw new Error(`Error al enviar los autos al cliente: ${error.message}`);
+//   }
+// };
 
 const toolNode = async (
   state: typeof stateGraph.State,
@@ -120,6 +122,8 @@ const toolNode = async (
   const lastMessage = messages[messages.length - 1] as AIMessage;
 
   const ui = typedUi(config);
+
+  let autosSugeridos = [] as Auto[];
 
   if (lastMessage && lastMessage.tool_calls) {
     const toolArgs = lastMessage.tool_calls[0].args as ObtenerAutosArgs;
@@ -131,6 +135,10 @@ const toolNode = async (
       const metadata = {
         message_id: lastMessage.id, // Aseguramos que el id del mensaje sea el correcto
       };
+
+      console.log("response.cars: ", response.cars);
+      autosSugeridos = response.cars;
+      
 
       ui.push(
         {
@@ -154,6 +162,7 @@ const toolNode = async (
   // Si no hay tool call, retornamos el estado actual
   return {
     ui: ui.items,
+    cars: autosSugeridos || [],
     messages: [...messages],
   };
 };
@@ -237,9 +246,7 @@ const workflow = new StateGraph(stateGraph, ConfigurationSchema)
 
   .addNode("callModel", callModel)
   .addNode("tools", toolNode)
-  .addNode("leadQualifierNode", leadQualifierNode)
-  .addEdge("__start__", "leadQualifierNode")
-  .addEdge("leadQualifierNode", "callModel")
+  .addEdge("__start__", "callModel")
   .addConditionalEdges("callModel", routeModelOutput, ["tools", "__end__"])
   .addEdge("tools", "callModel");
 
@@ -251,10 +258,11 @@ export const graph = workflow.compile({
   interruptAfter: [],
 });
 
-// const response = await graph.stream(
+// const response = await graph.invoke(
 //   { messages: "Busco alquilar una camioneta para 2 personas, que modelos tenes? voy a viajar del 21/6 al 29/6 , para retirar en aeropuerto, quiero que me digas cualkes son las opciones para ver si quiero , tengo licencia , 37 años, mariano, argentino, la devuelvo en el aeropuerto" },
 //   {
 //     configurable: {
+//       run_id: "123456",
 //       thread_id: "123",
 //       systemPromptTemplate: SYSTEM_PROMPT_TEMPLATE,
 //       model: "gpt-4o",
@@ -265,5 +273,8 @@ export const graph = workflow.compile({
 // );
 
 // for await (const event of response) {
-//   console.log(event);
+//   console.log("Event received: ", event);
+//   console.log("Event type: ", event.type);
+  
+ 
 // }
