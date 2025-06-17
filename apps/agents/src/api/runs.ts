@@ -74,8 +74,8 @@ const createValidRun = async (
     Object.assign(config.configurable, run.checkpoint);
   }
 
-  if (headers) {
-    for (const [rawKey, value] of headers.entries()) {
+  if (headers instanceof Headers) {
+   for (const [rawKey, value] of Object.entries(Object.fromEntries(headers as any))) {
       const key = rawKey.toLowerCase();
       if (key.startsWith("x-")) {
         if (["x-api-key", "x-tenant-id", "x-service-key"].includes(key)) {

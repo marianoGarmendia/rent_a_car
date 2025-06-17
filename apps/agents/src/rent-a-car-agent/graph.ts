@@ -89,28 +89,28 @@ function routeModelOutput(state: typeof stateGraph.State): string {
 }
 
 // enviar los autos al cliente
-const sendCarsToClient = async (cars: Auto[]) => {
-  console.log("Enviando autos al cliente: ", cars);
-  try {
-    const response = await fetch("http://localhost:5000/api/enviar-cars", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ cars }),
-    });
+// const sendCarsToClient = async (cars: Auto[]) => {
+//   console.log("Enviando autos al cliente: ", cars);
+//   try {
+//     const response = await fetch("http://localhost:5000/api/enviar-cars", {
+//       method: "POST",
+//       headers: {
+//         "Content-Type": "application/json",
+//       },
+//       body: JSON.stringify({ cars }),
+//     });
 
-    if (!response.ok) {
-      throw new Error(`Error al enviar los autos: ${response.statusText}`);
-    }
+//     if (!response.ok) {
+//       throw new Error(`Error al enviar los autos: ${response.statusText}`);
+//     }
 
-    const data = await response.json();
-    console.log("Respuesta del servidor al enviar autos: ", data);
-  } catch (error: any) {
-    console.error("Error al enviar los autos al cliente:", error);
-    throw new Error(`Error al enviar los autos al cliente: ${error.message}`);
-  }
-};
+//     const data = await response.json();
+//     console.log("Respuesta del servidor al enviar autos: ", data);
+//   } catch (error: any) {
+//     console.error("Error al enviar los autos al cliente:", error);
+//     throw new Error(`Error al enviar los autos al cliente: ${error.message}`);
+//   }
+// };
 
 const toolNode = async (
   state: typeof stateGraph.State,

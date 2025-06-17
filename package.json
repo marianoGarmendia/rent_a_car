@@ -3,13 +3,14 @@
   "author": "Your Name",
   "private": true,
   "scripts": {
-    "start": "concurrently \"turbo dev --filter=web\" \"turbo run start --filter=agents\"",
-    "dev": "concurrently \"turbo dev --filter=web\" \"turbo dev --filter=agents\"",
+    "start": "concurrently \"turbo run start --filter=web --parallel\" \"turbo run start --filter=agents\"",
+    "dev": "concurrently \"turbo dev --filter=web\" \"turbo run start --filter=agents\"",
     "build": "turbo build",
     "turbo:command": "turbo",
     "format": "turbo format",
     "lint": "turbo lint",
-    "lint:fix": "turbo lint:fix"
+    "lint:fix": "turbo lint:fix",
+     "clean": "rimraf dist"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.0",

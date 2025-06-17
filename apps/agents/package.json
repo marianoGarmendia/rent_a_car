@@ -5,7 +5,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "start": "tsx src/server/utils.server.ts --dev",
+   "start": "node dist/server/utils.server.js",
     "dev": "npx @langchain/langgraph-cli dev --port 2024 --config ../../langgraph.json",
     "build": "turbo build:internal --filter=agents",
     "build:internal": "pnpm run clean && tsc",
@@ -13,6 +13,13 @@
     "format": "prettier --config .prettierrc --write \"src\"",
     "lint": "eslint src",
     "lint:fix": "eslint src --fix"
+  },
+   "turbo": {
+    "pipeline": {
+      "build:internal": {
+        "outputs": ["dist/**"]
+      }
+    }
   },
   "dependencies": {
     "@babel/code-frame": "^7.27.1",
@@ -32,9 +39,14 @@
     "@langchain/openai": "^0.4.4",
     "@langchain/pinecone": "^0.2.0",
     "@pinecone-database/pinecone": "^5.1.1",
+    "@radix-ui/react-slot": "^1.2.3",
+    "@typescript/vfs": "^1.6.1",
+    "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cors": "^2.8.5",
+    "dedent": "^1.6.0",
     "dotenv": "^16.4.5",
+    "embla-carousel-react": "^8.6.0",
     "exit-hook": "^4.0.0",
     "express": "^5.1.0",
     "fs-extra": "^11.3.0",
@@ -43,6 +55,7 @@
     "langchain": "^0.3.19",
     "langsmith": "^0.3.30",
     "lodash-es": "^4.17.21",
+    "lucide-react": "^0.476.0",
     "mongodb": "^6.14.2",
     "stacktrace-parser": "^0.1.11",
     "superjson": "^2.2.2",
@@ -60,8 +73,10 @@
     "@types/babel__code-frame": "^7.0.6",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.3",
+    "@types/json-schema": "^7.0.15",
     "@types/lodash-es": "^4.17.12",
-    "@types/node": "^20",
+    "@types/node": "^20.19.0",
+    "@types/react": "^19.0.8",
     "@types/uuid": "^10.0.0",
     "@types/ws": "^8.18.1",
     "@typescript-eslint/eslint-plugin": "^8.26.1",

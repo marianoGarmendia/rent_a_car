@@ -351,7 +351,7 @@ export class SubgraphExtractor {
         },
     name: string,
     options?: { strict?: boolean },
-  ) {
+  ):any {
     const dirname =
       typeof target === "string" ? path.dirname(target) : __dirname;
 

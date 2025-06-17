@@ -6,7 +6,7 @@
   
   "scripts": {
     "dev": "next dev",
-    "build": "turbo build:internal --filter=web",
+    "build": "next build",
     "build:internal": "next build",
     "start": "next start",
     "lint": "next lint",

@@ -30,10 +30,10 @@ if (typeof config.env === "string") {
 
 const { spawnServer } = (
   process.argv.includes("--dev")
-    ? await import("./spawn.js")
+    ? await import("../cli/spawn.js")
     : // @ts-ignore May not exist
-      await import("../dist/cli/spawn.mjs")
-) as typeof import("./spawn.js");
+      await import("../cli/spawn.js")
+) as typeof import("../cli/spawn.js");
 
 await spawnServer(
   { port: process.env.PORT || "8080" , nJobsPerWorker: "10", host: "0.0.0.0" },
